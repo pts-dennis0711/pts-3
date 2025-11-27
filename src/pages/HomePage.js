@@ -809,7 +809,7 @@ const HomePage = () => {
   useEffect(() => {
     startTestimonialAutoSlide();
     return stopTestimonialAutoSlide;
-  }, []);
+  }, [startTestimonialAutoSlide, stopTestimonialAutoSlide]);
 
   useEffect(() => {
     const handleKeyPress = (e) => {

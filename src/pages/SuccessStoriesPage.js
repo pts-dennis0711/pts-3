@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { initialData } from '../data/initialData';
-import { Building2, TrendingUp, ArrowRight, Star, Award, Search, CheckCircle, Sparkles, Users } from 'lucide-react';
+import { Building2, TrendingUp, ArrowRight, Star, Award, Search, CheckCircle, Users } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const SuccessStoriesPage = () => {
-  const stories = initialData.successStories || [];
+  const stories = useMemo(() => initialData.successStories || [], []);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredStories, setFilteredStories] = useState(stories);
 
   useEffect(() => {
-    const filtered = stories.filter(story => 
+    const filtered = stories.filter(story =>
       story.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       story.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       story.client.toLowerCase().includes(searchQuery.toLowerCase())
@@ -69,13 +69,13 @@ const SuccessStoriesPage = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       <SEO title="Success Stories - ProtoTech Solutions" description="Discover how we've helped businesses achieve remarkable results" />
-      
+
       {/* Hero Section */}
       <section className="relative py-20 md:py-24 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(234,179,8,0.15),transparent_60%)]"></div>
         <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 stories-hero">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-yellow-500/20 bg-yellow-500/10 text-sm text-yellow-300 mb-6 backdrop-blur-sm">
@@ -134,7 +134,7 @@ const SuccessStoriesPage = () => {
                   {/* Background Gradient */}
                   <div className="absolute top-0 right-0 w-64 h-64 bg-yellow-500/5 rounded-full blur-3xl group-hover:bg-yellow-500/10 transition-all"></div>
                   <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl group-hover:bg-emerald-500/10 transition-all"></div>
-                  
+
                   <div className="relative z-10">
                     {/* Icon and Client */}
                     <div className="flex items-start justify-between mb-6">

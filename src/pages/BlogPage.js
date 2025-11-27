@@ -1,18 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { initialData } from '../data/initialData';
-import { Calendar, User, ArrowRight, Clock, Search, Filter, BookOpen, Sparkles } from 'lucide-react';
+import { Calendar, User, ArrowRight, Search, BookOpen, Sparkles } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const BlogPage = () => {
-  const blogs = initialData.blogs || [];
+  const blogs = useMemo(() => initialData.blogs || [], []);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredBlogs, setFilteredBlogs] = useState(blogs);
 
   useEffect(() => {
-    const filtered = blogs.filter(blog => 
+    const filtered = blogs.filter(blog =>
       blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       blog.excerpt.toLowerCase().includes(searchQuery.toLowerCase()) ||
       blog.author.toLowerCase().includes(searchQuery.toLowerCase())
@@ -74,13 +74,13 @@ const BlogPage = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       <SEO title="Blog - ProtoTech Solutions" description="Latest insights, articles, and updates from ProtoTech Solutions" />
-      
+
       {/* Hero Section */}
       <section className="relative py-20 md:py-24 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_60%)]"></div>
         <div className="absolute top-20 left-10 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 blog-hero">
           <div className="text-center max-w-4xl mx-auto">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-sky-500/20 bg-sky-500/10 text-sm text-sky-300 mb-6 backdrop-blur-sm">

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuthStore } from '../store/authStore';
-import { User, Mail, Calendar, ShoppingBag, Package, LogOut, Settings, FileText, MapPin, Phone, CreditCard } from 'lucide-react';
+import { User, Mail, Calendar, ShoppingBag, Package, LogOut, MapPin } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -65,11 +65,11 @@ const AccountPage = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       <SEO title="My Account - ProtoTech Solutions" description="Manage your account" />
-      
+
       {/* Header */}
       <section className="relative py-16 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_60%)]"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 account-hero">
           <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-white via-sky-100 to-cyan-100">
             My Account
@@ -104,11 +104,10 @@ const AccountPage = () => {
                       <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
-                          activeTab === tab.id
+                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id
                             ? 'bg-sky-500/20 border border-sky-500/30 text-sky-300'
                             : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
-                        }`}
+                          }`}
                       >
                         <Icon size={18} />
                         <span className="font-medium">{tab.label}</span>
@@ -233,11 +232,10 @@ const AccountPage = () => {
                                 <div className="text-xl font-bold text-sky-400 mb-1">
                                   ${order.total.toFixed(2)}
                                 </div>
-                                <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${
-                                  order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
-                                  order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
-                                  'bg-gray-500/10 text-gray-300 border border-gray-500/20'
-                                }`}>
+                                <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
+                                    order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
+                                      'bg-gray-500/10 text-gray-300 border border-gray-500/20'
+                                  }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>
                               </div>

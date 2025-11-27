@@ -3,15 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
-import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, ArrowLeft, Package, X } from 'lucide-react';
+import { ShoppingCart, Trash2, Plus, Minus, ArrowRight, ArrowLeft, Package } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
   const { cartItems, cartCount, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCartStore();
-  const [isProcessing, setIsProcessing] = useState(false);
   const animationsInitialized = useRef(false);
   const cartItemsLengthRef = useRef(cartItems.length);
   const itemRefs = useRef({});
@@ -26,7 +25,7 @@ const CartPage = () => {
 
     // Kill any existing animations on this specific item only
     gsap.killTweensOf(itemElement);
-    
+
     // Animate only the specific item being removed
     gsap.to(itemElement, {
       opacity: 0,
@@ -53,7 +52,7 @@ const CartPage = () => {
   useEffect(() => {
     // Check if items were actually added (not removed or quantity changed)
     const itemsAdded = cartItems.length > cartItemsLengthRef.current;
-    
+
     if (!animationsInitialized.current || itemsAdded) {
       gsap.registerPlugin(ScrollTrigger);
       const ctx = gsap.context(() => {
@@ -71,7 +70,7 @@ const CartPage = () => {
         if (itemsAdded || !animationsInitialized.current) {
           // Get all cart items
           const allItems = document.querySelectorAll('.cart-item');
-          
+
           if (allItems.length > 0) {
             if (itemsAdded && animationsInitialized.current) {
               // Items were added - animate only the new ones
@@ -130,10 +129,10 @@ const CartPage = () => {
           });
         }
       });
-      
+
       animationsInitialized.current = true;
       cartItemsLengthRef.current = cartItems.length;
-      
+
       return () => ctx.revert();
     } else if (cartItems.length < cartItemsLengthRef.current) {
       // Item was removed - just update the ref, don't re-animate
@@ -158,10 +157,10 @@ const CartPage = () => {
     return (
       <div className="bg-gray-950 text-white min-h-screen">
         <SEO title="Shopping Cart - ProtoTech Solutions" description="Your shopping cart" />
-        
+
         <section className="relative py-20 md:py-24 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_60%)]"></div>
-          
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <Link
               to="/3d-products"
@@ -197,11 +196,11 @@ const CartPage = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       <SEO title="Shopping Cart - ProtoTech Solutions" description="Review your cart items" />
-      
+
       {/* Header */}
       <section className="relative py-16 md:py-20 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_60%)]"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 cart-hero">
           <Link
             to="/3d-products"
@@ -251,76 +250,76 @@ const CartPage = () => {
                     className="cart-item bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 hover:border-sky-500/50 transition-all duration-300"
                     style={{ opacity: 1, transform: 'translateX(0)' }}
                   >
-                  <div className="flex gap-6">
-                    {/* Product Image/Icon */}
-                    <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sky-600/30 via-purple-600/30 to-pink-600/30 flex items-center justify-center flex-shrink-0">
-                      <div className="text-4xl">{item.image || '📦'}</div>
-                    </div>
-
-                    {/* Product Details */}
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-xl font-bold mb-1 text-white">{item.name || item.title}</h3>
-                          {item.pricingType && (
-                            <span className="inline-block px-3 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 font-semibold">
-                              {item.pricingType}
-                            </span>
-                          )}
-                        </div>
-                        <button
-                          onClick={() => {
-                            const itemKey = `${item.id}-${item.pricingType || idx}`;
-                            const itemElement = itemRefs.current[itemKey];
-                            handleRemoveItem(item.id, item.pricingType, itemElement);
-                          }}
-                          className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
-                          aria-label="Remove item"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                    <div className="flex gap-6">
+                      {/* Product Image/Icon */}
+                      <div className="w-24 h-24 rounded-xl bg-gradient-to-br from-sky-600/30 via-purple-600/30 to-pink-600/30 flex items-center justify-center flex-shrink-0">
+                        <div className="text-4xl">{item.image || '📦'}</div>
                       </div>
 
-                      {item.description && (
-                        <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
-                      )}
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <span className="text-sm text-gray-400">Quantity:</span>
-                          <div className="flex items-center gap-2 bg-gray-700/50 rounded-lg border border-gray-600">
-                            <button
-                              onClick={() => updateQuantity(item.id, item.pricingType, (item.quantity || 1) - 1)}
-                              className="p-2 hover:bg-gray-600 transition-colors rounded-l-lg"
-                              disabled={(item.quantity || 1) <= 1}
-                            >
-                              <Minus size={14} className="text-gray-300" />
-                            </button>
-                            <span className="px-3 py-1 text-white font-semibold min-w-[3rem] text-center">
-                              {item.quantity || 1}
-                            </span>
-                            <button
-                              onClick={() => updateQuantity(item.id, item.pricingType, (item.quantity || 1) + 1)}
-                              className="p-2 hover:bg-gray-600 transition-colors rounded-r-lg"
-                            >
-                              <Plus size={14} className="text-gray-300" />
-                            </button>
+                      {/* Product Details */}
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-xl font-bold mb-1 text-white">{item.name || item.title}</h3>
+                            {item.pricingType && (
+                              <span className="inline-block px-3 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-xs text-sky-300 font-semibold">
+                                {item.pricingType}
+                              </span>
+                            )}
                           </div>
+                          <button
+                            onClick={() => {
+                              const itemKey = `${item.id}-${item.pricingType || idx}`;
+                              const itemElement = itemRefs.current[itemKey];
+                              handleRemoveItem(item.id, item.pricingType, itemElement);
+                            }}
+                            className="p-2 rounded-lg hover:bg-red-500/10 text-gray-400 hover:text-red-400 transition-colors"
+                            aria-label="Remove item"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-white">
-                            ${((parseFloat(item.price?.replace('$', '').replace(',', '') || 0)) * (item.quantity || 1)).toFixed(2)}
-                          </div>
-                          {item.quantity > 1 && (
-                            <div className="text-sm text-gray-400">
-                              ${parseFloat(item.price?.replace('$', '').replace(',', '') || 0).toFixed(2)} each
+
+                        {item.description && (
+                          <p className="text-gray-400 text-sm mb-4 line-clamp-2">{item.description}</p>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-400">Quantity:</span>
+                            <div className="flex items-center gap-2 bg-gray-700/50 rounded-lg border border-gray-600">
+                              <button
+                                onClick={() => updateQuantity(item.id, item.pricingType, (item.quantity || 1) - 1)}
+                                className="p-2 hover:bg-gray-600 transition-colors rounded-l-lg"
+                                disabled={(item.quantity || 1) <= 1}
+                              >
+                                <Minus size={14} className="text-gray-300" />
+                              </button>
+                              <span className="px-3 py-1 text-white font-semibold min-w-[3rem] text-center">
+                                {item.quantity || 1}
+                              </span>
+                              <button
+                                onClick={() => updateQuantity(item.id, item.pricingType, (item.quantity || 1) + 1)}
+                                className="p-2 hover:bg-gray-600 transition-colors rounded-r-lg"
+                              >
+                                <Plus size={14} className="text-gray-300" />
+                              </button>
                             </div>
-                          )}
+                          </div>
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-white">
+                              ${((parseFloat(item.price?.replace('$', '').replace(',', '') || 0)) * (item.quantity || 1)).toFixed(2)}
+                            </div>
+                            {item.quantity > 1 && (
+                              <div className="text-sm text-gray-400">
+                                ${parseFloat(item.price?.replace('$', '').replace(',', '') || 0).toFixed(2)} each
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
                 );
               })}
             </div>
@@ -329,7 +328,7 @@ const CartPage = () => {
             <div className="lg:col-span-1">
               <div className="cart-summary bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 sticky top-24">
                 <h2 className="text-2xl font-bold mb-6 text-white">Order Summary</h2>
-                
+
                 <div className="space-y-4 mb-6">
                   <div className="flex justify-between text-gray-400">
                     <span>Subtotal</span>
@@ -353,7 +352,7 @@ const CartPage = () => {
 
                 <button
                   onClick={handleCheckout}
-                  disabled={isProcessing || cartItems.length === 0}
+                  disabled={cartItems.length === 0}
                   className="w-full py-4 px-6 bg-gradient-to-r from-sky-500 to-cyan-500 text-white rounded-xl font-semibold text-lg hover:from-sky-600 hover:to-cyan-600 transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 mb-4"
                 >
                   <span>Proceed to Checkout</span>

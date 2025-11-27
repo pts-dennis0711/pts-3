@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Download, CheckCircle, Mail, AlertCircle } from 'lucide-react';
 import SEO from '../../components/SEO';
 import { productCategories } from '../../data/productCategories';
@@ -8,21 +8,20 @@ import { sendTrialDownloadEmail } from '../../services/emailService';
 
 const TrialDownloadForm = () => {
   const { categorySlug, productSlug } = useParams();
-  const navigate = useNavigate();
-  
+
   // Find category
   const category = Object.values(productCategories).find(cat => cat.slug === categorySlug);
-  
+
   // Get product details - try category-specific slug first, then generic slug
   const categorySpecificSlug = `${categorySlug}-${productSlug}`;
   const productDetails = getProductDetails(categorySpecificSlug) || getProductDetails(productSlug);
-  
+
   // Find product name from category
-  const product = category 
+  const product = category
     ? [...category.exporters, ...category.importers].find(p => {
-        const slug = p.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
-        return slug === productSlug;
-      })
+      const slug = p.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      return slug === productSlug;
+    })
     : null;
 
   // Form state
@@ -50,14 +49,14 @@ const TrialDownloadForm = () => {
 
   // Get download URL - default pattern if not specified
   const downloadUrl = details.downloadUrl || `https://staging8.prototechsolutions.com/msi-softwares/${productSlug}.msi`;
-  
+
   // Full product name for display
   const fullProductName = `${details.name} for ${category?.name || 'CAD Software'}`;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!formData.name || !formData.email) {
       setError('Please fill in all required fields');
       return;
@@ -114,11 +113,11 @@ const TrialDownloadForm = () => {
   if (emailSent) {
     return (
       <div className="bg-gray-950 text-white min-h-screen py-12">
-        <SEO 
-          title={`Email Sent - ${fullProductName} - ProtoTech Solutions`} 
+        <SEO
+          title={`Email Sent - ${fullProductName} - ProtoTech Solutions`}
           description={`Trial download email sent for ${fullProductName}`}
         />
-        
+
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Link */}
           <Link
@@ -136,15 +135,15 @@ const TrialDownloadForm = () => {
               <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-emerald-500/20 mb-6">
                 <CheckCircle size={48} className="text-emerald-400" />
               </div>
-              
+
               <h1 className="text-3xl md:text-4xl font-bold mb-4 text-white">
                 Email Sent Successfully!
               </h1>
-              
+
               <p className="text-gray-300 text-lg mb-6">
                 We've sent the trial download link to <strong className="text-emerald-400">{formData.email}</strong>
               </p>
-              
+
               <div className="bg-gray-700/50 rounded-xl p-6 mb-6 text-left">
                 <div className="flex items-start gap-3">
                   <Mail size={24} className="text-emerald-400 flex-shrink-0 mt-1" />
@@ -187,11 +186,11 @@ const TrialDownloadForm = () => {
   if (!emailSent) {
     return (
       <div className="bg-gray-950 text-white min-h-screen py-12">
-        <SEO 
-          title={`Free Trial - ${fullProductName} - ProtoTech Solutions`} 
+        <SEO
+          title={`Free Trial - ${fullProductName} - ProtoTech Solutions`}
           description={`Get a free trial of ${fullProductName}. No credit card required.`}
         />
-        
+
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Back Link */}
           <Link
@@ -216,7 +215,7 @@ const TrialDownloadForm = () => {
                   Try {fullProductName} free for 30 days. No credit card required.
                 </p>
               </div>
-              
+
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
@@ -254,7 +253,7 @@ const TrialDownloadForm = () => {
                     <p className="text-red-400 text-sm">{error}</p>
                   </div>
                 )}
-                
+
                 <button
                   type="submit"
                   disabled={isSubmitting}

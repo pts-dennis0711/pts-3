@@ -22,13 +22,12 @@ const AdminDashboard = ({ products, blogs, stories }) => {
 
   // Get orders by status
   const pendingOrders = orders.filter(order => order.status === 'pending').length;
-  const completedOrders = orders.filter(order => order.status === 'completed').length;
 
   return (
     <div className="bg-gradient-to-b from-gray-50 to-white min-h-screen">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <h1 className="text-5xl font-bold mb-8" style={{ color: '#01A5BF' }}>Admin Dashboard</h1>
-        
+
         {/* Main Stats */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">
           {[
@@ -89,11 +88,10 @@ const AdminDashboard = ({ products, blogs, stories }) => {
                       <td className="py-3 px-4 text-sm text-gray-700">{order.items?.length || 0} item(s)</td>
                       <td className="py-3 px-4 text-sm font-semibold text-gray-900">${order.total?.toFixed(2) || '0.00'}</td>
                       <td className="py-3 px-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-gray-100 text-gray-800'
+                          }`}>
                           {order.status || 'pending'}
                         </span>
                       </td>

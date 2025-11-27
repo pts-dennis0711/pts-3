@@ -1,17 +1,16 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Download, ExternalLink, Info, History, ArrowUp, GraduationCap, HelpCircle, Play, Star, Mail, User, ArrowRight, CheckCircle2, CheckCircle, Sparkles, Zap, Shield, Globe } from 'lucide-react';
+import { ArrowLeft, Download, ExternalLink, Info, History, ArrowUp, GraduationCap, HelpCircle, Play, Mail, User, ArrowRight, CheckCircle, Sparkles, Zap, Shield, Globe } from 'lucide-react';
 import SEO from '../../components/SEO';
 import PricingCard from '../../components/PricingCard';
 import VersionHistoryModal from '../../components/modals/VersionHistoryModal';
 import UpgradeLicenseModal from '../../components/modals/UpgradeLicenseModal';
 import EducationDiscountModal from '../../components/modals/EducationDiscountModal';
 import AddedToCartModal from '../../components/modals/AddedToCartModal';
-import { productCategories, whyChooseFeatures } from '../../data/productCategories';
+import { productCategories } from '../../data/productCategories';
 import { getProductDetails } from '../../data/productDetails';
 import { getProductPricing } from '../../data/products/pricing';
 import { useCartStore } from '../../store/cartStore';
-import { useAuthStore } from '../../store/authStore';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { getProductSchema, getBreadcrumbSchema, getFAQSchema } from '../../utils/structuredData';
@@ -21,7 +20,6 @@ const ProductPage = () => {
   const { categorySlug, productSlug } = useParams();
   const navigate = useNavigate();
   const { addToCart: addToEcomCart } = useCartStore();
-  const { isAuthenticated } = useAuthStore();
 
   // Find category
   const category = Object.values(productCategories).find(cat => cat.slug === categorySlug);
@@ -39,7 +37,6 @@ const ProductPage = () => {
     : null;
 
   const isExporter = category && category.exporters.includes(product);
-  const isImporter = category && category.importers.includes(product);
 
   // Get product-specific pricing (or default pricing if no custom pricing exists)
   const productPricing = getProductPricing(productSlug);

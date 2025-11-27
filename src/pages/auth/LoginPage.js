@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SEO from '../../components/SEO';
 import { useAuthStore } from '../../store/authStore';
-import { Mail, Lock, LogIn, UserPlus, ArrowLeft, Sparkles } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, ArrowLeft } from 'lucide-react';
 import { gsap } from 'gsap';
 
 const LoginPage = () => {

@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SEO from '../../components/SEO';
-import { gsap } from 'gsap';
 
 export default function DataInteroperabilityPage() {
   const navigate = useNavigate();
@@ -9,7 +8,7 @@ export default function DataInteroperabilityPage() {
   return (
     <div className="bg-gradient-to-b from-indigo-950 via-blue-900 to-indigo-950 text-white min-h-screen">
       <SEO title="Data Interoperability" description="IFC, STEP, USDZ data interoperability and conversion services" />
-      
+
       <section className="relative min-h-[85vh] flex items-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
           <div className="max-w-4xl">
@@ -20,10 +19,10 @@ export default function DataInteroperabilityPage() {
               <span className="text-blue-400">Interoperability</span>
             </h1>
             <p className="text-xl text-gray-300 mb-12">
-              Seamless data exchange between different CAD and BIM formats. 
+              Seamless data exchange between different CAD and BIM formats.
               Support for IFC, STEP, USDZ, and many more formats.
             </p>
-            <button 
+            <button
               onClick={() => navigate('/contact')}
               className="px-10 py-4 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-400"
             >

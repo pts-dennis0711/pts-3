@@ -3,7 +3,7 @@ import Navigation from './components/Navigation';
 import SEO from './components/SEO';
 import ScrollToTop from './components/ScrollToTop';
 import { getOrganizationSchema } from './utils/structuredData';
-import { BrowserRouter, Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation, Link } from 'react-router-dom';
 import HomePage from './pages/HomePage';
 import ShopPage from './pages/ShopPage';
 import ProductDetailPage from './pages/ProductDetailPage';
@@ -96,10 +96,10 @@ function App() {
   const [blogs, setBlogs] = useState(loadState('blogs', initialData.blogs));
   const [successStories, setSuccessStories] = useState(loadState('successStories', initialData.successStories));
   const [isAdmin, setIsAdmin] = useState(loadState('isAdmin', false));
-  const [searchQuery, setSearchQuery] = useState('');
-  const { cartCount, addToCart, setSelectedProduct, selectedProduct } = useStore();
+  const { cartCount } = useStore();
   const { cartCount: ecomCartCount } = useCartStore();
-  const { isAuthenticated, initializeCart } = useAuthStore();
+  const { isAuthenticated } = useAuthStore();
+  const navigate = useNavigate();
 
   useEffect(() => {
     localStorage.setItem('cartCount', JSON.stringify(cartCount));
@@ -134,16 +134,7 @@ function App() {
     });
   }, [location.pathname, location.search]);
 
-  const openProductDetail = (product) => {
-    setSelectedProduct(product);
-    navigate('/product');
-  };
 
-  const handleSearch = (q) => {
-    setSearchQuery(q);
-    navigate('/search');
-  };
-  const navigate = useNavigate();
 
   // Organization schema for app-level
   const organizationSchema = getOrganizationSchema();

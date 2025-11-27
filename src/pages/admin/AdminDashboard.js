@@ -1,23 +1,41 @@
 import React, { useEffect, useState } from 'react';
 import { Package, FileText, Award, ShoppingBag, Users, DollarSign } from 'lucide-react';
 
+import { getAllOrders } from '../../services/orderService';
+
 const AdminDashboard = ({ products, blogs, stories }) => {
   const [orders, setOrders] = useState([]);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [totalCustomers, setTotalCustomers] = useState(0);
 
   useEffect(() => {
-    // Load orders from localStorage
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    setOrders(allOrders);
+    const fetchOrders = async () => {
+      try {
+        // Try to fetch from API first
+        const dbOrders = await getAllOrders();
+        setOrders(dbOrders);
 
-    // Calculate total revenue
-    const revenue = allOrders.reduce((sum, order) => sum + (order.total || 0), 0);
-    setTotalRevenue(revenue);
+        // Calculate stats from DB orders
+        const revenue = dbOrders.reduce((sum, order) => sum + (parseFloat(order.grand_total) || parseFloat(order.total) || 0), 0);
+        setTotalRevenue(revenue);
 
-    // Calculate unique customers
-    const uniqueCustomers = new Set(allOrders.map(order => order.userId).filter(Boolean));
-    setTotalCustomers(uniqueCustomers.size);
+        const uniqueCustomers = new Set(dbOrders.map(order => order.email).filter(Boolean));
+        setTotalCustomers(uniqueCustomers.size);
+      } catch (error) {
+        console.warn('Failed to fetch orders from DB, falling back to localStorage:', error);
+        // Fallback to localStorage
+        const localOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        setOrders(localOrders);
+
+        const revenue = localOrders.reduce((sum, order) => sum + (order.total || 0), 0);
+        setTotalRevenue(revenue);
+
+        const uniqueCustomers = new Set(localOrders.map(order => order.userId).filter(Boolean));
+        setTotalCustomers(uniqueCustomers.size);
+      }
+    };
+
+    fetchOrders();
   }, []);
 
   // Get orders by status
@@ -89,8 +107,8 @@ const AdminDashboard = ({ products, blogs, stories }) => {
                       <td className="py-3 px-4 text-sm font-semibold text-gray-900">${order.total?.toFixed(2) || '0.00'}</td>
                       <td className="py-3 px-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${order.status === 'completed' ? 'bg-green-100 text-green-800' :
-                            order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
+                          order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-gray-100 text-gray-800'
                           }`}>
                           {order.status || 'pending'}
                         </span>

@@ -5,6 +5,7 @@ import { useAuthStore } from '../store/authStore';
 import { User, Mail, Calendar, ShoppingBag, Package, LogOut, MapPin } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { getUserOrders } from '../services/orderService';
 
 const AccountPage = () => {
   const navigate = useNavigate();
@@ -19,9 +20,23 @@ const AccountPage = () => {
     }
 
     // Load user orders
-    const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-    const userOrders = allOrders.filter(order => order.userId === user?.id);
-    setOrders(userOrders);
+    const fetchUserOrders = async () => {
+      if (!user?.id) return;
+
+      try {
+        // Try to fetch from API first
+        const dbOrders = await getUserOrders(user.id);
+        setOrders(dbOrders);
+      } catch (error) {
+        console.warn('Failed to fetch user orders from DB, falling back to localStorage:', error);
+        // Fallback to localStorage
+        const allOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+        const userOrders = allOrders.filter(order => order.userId === user?.id);
+        setOrders(userOrders);
+      }
+    };
+
+    fetchUserOrders();
 
     gsap.registerPlugin(ScrollTrigger);
     const ctx = gsap.context(() => {
@@ -105,8 +120,8 @@ const AccountPage = () => {
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id)}
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === tab.id
-                            ? 'bg-sky-500/20 border border-sky-500/30 text-sky-300'
-                            : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
+                          ? 'bg-sky-500/20 border border-sky-500/30 text-sky-300'
+                          : 'text-gray-400 hover:bg-gray-700/50 hover:text-white'
                           }`}
                       >
                         <Icon size={18} />
@@ -233,8 +248,8 @@ const AccountPage = () => {
                                   ${order.total.toFixed(2)}
                                 </div>
                                 <span className={`inline-block px-3 py-1 rounded-lg text-xs font-semibold ${order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
-                                    order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
-                                      'bg-gray-500/10 text-gray-300 border border-gray-500/20'
+                                  order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
+                                    'bg-gray-500/10 text-gray-300 border border-gray-500/20'
                                   }`}>
                                   {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                                 </span>

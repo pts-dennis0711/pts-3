@@ -4,6 +4,7 @@ import SEO from '../components/SEO';
 import { useAuthStore } from '../store/authStore';
 import { ArrowLeft, Package, MapPin, Phone, Mail, CreditCard, Calendar, CheckCircle, Truck } from 'lucide-react';
 import { gsap } from 'gsap';
+import { getOrder } from '../services/orderService';
 
 const OrderDetailPage = () => {
   const { orderId } = useParams();
@@ -18,19 +19,40 @@ const OrderDetailPage = () => {
       return;
     }
 
-    // Load order from localStorage
-    const orderData = localStorage.getItem(`order_${orderId}`);
-    if (orderData) {
-      const parsedOrder = JSON.parse(orderData);
-      if (parsedOrder.userId === user?.id) {
-        setOrder(parsedOrder);
-      } else {
-        navigate('/account');
+    const fetchOrder = async () => {
+      try {
+        // Try to fetch from API first
+        const dbOrder = await getOrder(orderId);
+        if (dbOrder) {
+          // Check if order belongs to user (if user ID is present)
+          if (dbOrder.user_id && dbOrder.user_id !== user?.id) {
+            navigate('/account');
+            return;
+          }
+          setOrder(dbOrder);
+        } else {
+          throw new Error('Order not found in DB');
+        }
+      } catch (error) {
+        console.warn('Failed to fetch order from DB, falling back to localStorage:', error);
+        // Fallback to localStorage
+        const orderData = localStorage.getItem(`order_${orderId}`);
+        if (orderData) {
+          const parsedOrder = JSON.parse(orderData);
+          if (parsedOrder.userId === user?.id) {
+            setOrder(parsedOrder);
+          } else {
+            navigate('/account');
+          }
+        } else {
+          navigate('/account');
+        }
+      } finally {
+        setLoading(false);
       }
-    } else {
-      navigate('/account');
-    }
-    setLoading(false);
+    };
+
+    fetchOrder();
 
     gsap.from('.order-hero', {
       opacity: 0,
@@ -62,11 +84,11 @@ const OrderDetailPage = () => {
   return (
     <div className="bg-gray-950 text-white min-h-screen">
       <SEO title={`Order ${order.id} - ProtoTech Solutions`} description="View your order details" />
-      
+
       {/* Header */}
       <section className="relative py-16 bg-gradient-to-br from-gray-900 via-gray-950 to-black border-b border-gray-800 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(59,130,246,0.15),transparent_60%)]"></div>
-        
+
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 order-hero">
           <Link
             to="/account"
@@ -85,11 +107,10 @@ const OrderDetailPage = () => {
                 Order #{order.id.split('_')[1]}
               </p>
             </div>
-            <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${
-              order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
+            <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${order.status === 'pending' ? 'bg-yellow-500/10 text-yellow-300 border border-yellow-500/20' :
               order.status === 'completed' ? 'bg-emerald-500/10 text-emerald-300 border border-emerald-500/20' :
-              'bg-gray-500/10 text-gray-300 border border-gray-500/20'
-            }`}>
+                'bg-gray-500/10 text-gray-300 border border-gray-500/20'
+              }`}>
               {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
             </span>
           </div>
@@ -181,7 +202,7 @@ const OrderDetailPage = () => {
             <div className="lg:col-span-1">
               <div className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-2xl p-6 sticky top-24">
                 <h2 className="text-2xl font-bold mb-6 text-white">Order Summary</h2>
-                
+
                 <div className="space-y-4 mb-6">
                   <div className="flex items-center gap-2 text-gray-400 mb-4 pb-4 border-b border-gray-700">
                     <Calendar size={18} />

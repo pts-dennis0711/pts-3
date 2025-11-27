@@ -3,9 +3,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useCartStore } from '../store/cartStore';
 import { useAuthStore } from '../store/authStore';
-import { CreditCard, Lock, ArrowLeft, CheckCircle, Mail, MapPin, Phone, User, FileText, Wallet } from 'lucide-react';
+import { CreditCard, Lock, ArrowLeft, CheckCircle, Mail, MapPin, Phone, User, Wallet } from 'lucide-react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { createOrder } from '../services/orderService';
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -112,10 +113,11 @@ const CheckoutPage = () => {
     setIsProcessing(true);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Create order object
+      const total = getCartTotal();
+      const tax = total * 0.1;
+      const grandTotal = total + tax;
 
-      // Create order
       const order = {
         id: `order_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         userId: user?.id,
@@ -129,12 +131,33 @@ const CheckoutPage = () => {
             cardName: formData.cardName,
           } : {}),
         },
-        total: getCartTotal() * 1.1, // Including tax
+        total: total,
+        tax: tax,
+        grandTotal: grandTotal,
+        paymentMethod: formData.paymentMethod,
         status: 'pending',
         createdAt: new Date().toISOString(),
       };
 
-      // Save order to localStorage
+      // Customer data
+      const customer = {
+        userId: user?.id,
+        sessionId: useAuthStore.getState().sessionId,
+        email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        phone: formData.phone,
+      };
+
+      // Save to database
+      try {
+        await createOrder(order, customer);
+        console.log('✅ Order saved to database');
+      } catch (dbError) {
+        console.error('⚠️ Failed to save to database, using localStorage fallback:', dbError);
+      }
+
+      // Also save to localStorage as backup
       const orders = JSON.parse(localStorage.getItem('orders') || '[]');
       orders.push(order);
       localStorage.setItem('orders', JSON.stringify(orders));
@@ -150,6 +173,7 @@ const CheckoutPage = () => {
         navigate(`/order/${order.id}`);
       }, 2000);
     } catch (err) {
+      console.error('Error during checkout:', err);
       setErrors({ submit: 'An error occurred. Please try again.' });
     } finally {
       setIsProcessing(false);

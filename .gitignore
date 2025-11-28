@@ -13,11 +13,26 @@
 
 # misc
 .DS_Store
+.env
 .env.local
 .env.development.local
 .env.test.local
 .env.production.local
 
+# Server environment files (CRITICAL - contains sensitive credentials)
+server/.env
+server/.env.local
+server/.env.development
+server/.env.production
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

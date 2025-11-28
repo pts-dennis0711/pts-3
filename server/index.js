@@ -611,9 +611,3 @@ app.listen(PORT, () => {
   console.log(`📧 SMTP Host: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}`);
   console.log(`👤 SMTP User: ${process.env.SMTP_USER || 'Not configured'}`);
 });
-
-
-app.use(cors({
-  origin: '*',
-  methods: "GET,POST,PUT,DELETE",
-}));

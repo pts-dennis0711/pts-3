@@ -8,21 +8,74 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isDatabaseEnabled = Boolean(process.env.DATABASE_URL);
 
+// CORS Configuration - Allow Vercel frontend and other origins
+const allowedOrigins = [
+  'https://staging8.prototechsolutions.com',
+  'https://prototechsolutions.com',
+  'https://pts-3-tau.vercel.app',
+  'https://pts-3-tau-*.vercel.app', // Vercel preview deployments
+  'http://localhost:3000',
+  'http://localhost:5173',
+  ...(process.env.FRONTEND_URL ? [process.env.FRONTEND_URL] : [])
+];
+
+// CORS middleware with explicit configuration
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or curl)
+    if (!origin) {
+      return callback(null, true);
+    }
+    
+    // Check if origin is in allowed list
+    const isAllowed = allowedOrigins.some(allowed => {
+      if (allowed.includes('*')) {
+        // Handle wildcard patterns like 'https://pts-3-tau-*.vercel.app'
+        const pattern = allowed.replace(/\*/g, '.*');
+        const regex = new RegExp(`^${pattern}$`);
+        return regex.test(origin);
+      }
+      return allowed === origin;
+    });
+    
+    // In development, allow all origins
+    if (process.env.NODE_ENV !== 'production') {
+      return callback(null, true);
+    }
+    
+    // In production, check allowed list
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      // Log but allow for now to prevent blocking
+      console.warn(`⚠️  Request from unlisted origin: ${origin}`);
+      callback(null, true);
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400 // 24 hours
+}));
+
+// Handle preflight requests explicitly
+app.options('*', cors());
+
 // Middleware
-app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 const initializeDatabase = async () => {
   if (!isDatabaseEnabled) return;
   try {
-    // Create customers table
+    // Create customers table with unique constraint on email
     await query(`
       CREATE TABLE IF NOT EXISTS customers (
         id SERIAL PRIMARY KEY,
         user_id TEXT,
         session_id TEXT,
-        email TEXT NOT NULL,
+        email TEXT NOT NULL UNIQUE,
         first_name TEXT NOT NULL,
         last_name TEXT NOT NULL,
         phone TEXT,
@@ -30,6 +83,11 @@ const initializeDatabase = async () => {
       );
     `);
     console.log('🗄️  customers table is ready');
+    
+    // Create index on email for faster lookups (if unique constraint doesn't create it automatically)
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+    `).catch(() => {}); // Ignore if index already exists
 
     // Create orders table
     await query(`
@@ -86,20 +144,42 @@ const initializeDatabase = async () => {
   }
 };
 
-if (isDatabaseEnabled) {
-  testConnection().then((connected) => {
-    if (connected) {
-      initializeDatabase();
+// Initialize database connection with retry logic
+const initializeDatabaseConnection = async (retries = 3, delay = 2000) => {
+  if (!isDatabaseEnabled) {
+    console.log('⚠️  Database is not enabled. Set DATABASE_URL to enable database features.');
+    return;
+  }
+
+  for (let i = 0; i < retries; i++) {
+    try {
+      const connected = await testConnection();
+      if (connected) {
+        await initializeDatabase();
+        console.log('✅ Database initialized successfully');
+        return;
+      }
+    } catch (error) {
+      console.error(`❌ Database connection attempt ${i + 1}/${retries} failed:`, error.message);
+      if (i < retries - 1) {
+        console.log(`⏳ Retrying in ${delay / 1000} seconds...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      } else {
+        console.error('❌ Failed to connect to database after all retries');
+      }
     }
-  });
-}
+  }
+};
+
+// Start database initialization
+initializeDatabaseConnection();
 
 // SMTP Configuration using Hostinger
 const createTransporter = () => {
-  return nodemailer.createTransport({
+  const transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.hostinger.com',
     port: parseInt(process.env.SMTP_PORT || '465'),
-    secure: process.env.SMTP_SECURE === 'true' || true, // true for 465, false for other ports
+    secure: process.env.SMTP_SECURE !== 'false', // true for 465, false for other ports (defaults to true)
     auth: {
       user: process.env.SMTP_USER, // Your Hostinger email address
       pass: process.env.SMTP_PASS, // Your Hostinger email password
@@ -107,13 +187,57 @@ const createTransporter = () => {
     tls: {
       // Do not fail on invalid certs
       rejectUnauthorized: false
+    },
+    // Connection timeout settings
+    connectionTimeout: 10000, // 10 seconds to establish connection
+    greetingTimeout: 10000, // 10 seconds to receive greeting
+    socketTimeout: 10000, // 10 seconds for socket inactivity
+    // Retry settings
+    pool: true,
+    maxConnections: 1,
+    maxMessages: 3
+  });
+
+  // Verify transporter configuration
+  transporter.verify((error, success) => {
+    if (error) {
+      console.error('❌ SMTP connection verification failed:', error.message);
+    } else {
+      console.log('✅ SMTP server is ready to send emails');
     }
   });
+
+  return transporter;
 };
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Email service is running' });
+// Health check endpoint with database status
+app.get('/api/health', async (req, res) => {
+  const health = {
+    status: 'ok',
+    message: 'Email service is running',
+    timestamp: new Date().toISOString(),
+    database: {
+      enabled: isDatabaseEnabled,
+      connected: false
+    },
+    smtp: {
+      configured: Boolean(process.env.SMTP_USER && process.env.SMTP_PASS),
+      host: process.env.SMTP_HOST || 'smtp.hostinger.com'
+    }
+  };
+
+  if (isDatabaseEnabled) {
+    try {
+      await query('SELECT 1');
+      health.database.connected = true;
+    } catch (error) {
+      health.database.connected = false;
+      health.database.error = error.message;
+    }
+  }
+
+  const statusCode = health.database.enabled && !health.database.connected ? 503 : 200;
+  res.status(statusCode).json(health);
 });
 
 // Sitemap endpoint
@@ -179,19 +303,65 @@ Sitemap: ${siteUrl}/sitemap.xml`;
 
 // Send trial download email endpoint
 app.post('/api/send-trial-email', async (req, res) => {
+  // Log request for debugging
+  console.log('📧 Email request received:', {
+    origin: req.headers.origin,
+    method: req.method,
+    hasBody: !!req.body,
+    timestamp: new Date().toISOString()
+  });
+
   try {
     const { to, toName, subject, html, productName, downloadUrl } = req.body;
 
     // Validate required fields
     if (!to || !subject || !html) {
+      console.error('❌ Missing required fields:', { to: !!to, subject: !!subject, html: !!html });
       return res.status(400).json({
         success: false,
         error: 'Missing required fields: to, subject, and html are required'
       });
     }
 
+    // Validate SMTP configuration
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      console.error('❌ SMTP not configured:', {
+        hasUser: !!process.env.SMTP_USER,
+        hasPass: !!process.env.SMTP_PASS
+      });
+      return res.status(500).json({
+        success: false,
+        error: 'Email service is not configured. Please contact support.'
+      });
+    }
+
     // Create transporter
+    console.log('🔧 Creating SMTP transporter...');
     const transporter = createTransporter();
+
+    // Verify connection before sending (with timeout)
+    console.log('🔍 Verifying SMTP connection...');
+    try {
+      await Promise.race([
+        new Promise((resolve, reject) => {
+          transporter.verify((error, success) => {
+            if (error) {
+              reject(error);
+            } else {
+              resolve(success);
+            }
+          });
+        }),
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('SMTP verification timeout after 10 seconds')), 10000)
+        )
+      ]);
+      console.log('✅ SMTP connection verified');
+    } catch (verifyError) {
+      console.error('❌ SMTP verification failed:', verifyError.message);
+      // Continue anyway - verification might fail but sending could still work
+      console.log('⚠️  Continuing with email send despite verification failure...');
+    }
 
     // Email options
     const mailOptions = {
@@ -203,10 +373,15 @@ app.post('/api/send-trial-email', async (req, res) => {
       text: `Thank you for choosing ProtoTech's ${productName || 'Product'}.\n\nClick here to download: ${downloadUrl || 'Download link'}\n\nActivation Key is Not Required. Trial is Automatically Activated.`
     };
 
-    // Send email
-    const info = await transporter.sendMail(mailOptions);
+    // Send email with timeout
+    console.log('📤 Attempting to send email to:', to);
+    const sendPromise = transporter.sendMail(mailOptions);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Email send timeout after 30 seconds')), 30000)
+    );
 
-    console.log('Email sent successfully:', info.messageId);
+    const info = await Promise.race([sendPromise, timeoutPromise]);
+    console.log('✅ Email sent successfully:', info.messageId);
 
     if (isDatabaseEnabled) {
       await query(
@@ -223,20 +398,53 @@ app.post('/api/send-trial-email', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error sending email:', error);
+    // Enhanced error logging
+    console.error('❌ Error sending email:', {
+      message: error.message,
+      code: error.code,
+      command: error.command,
+      response: error.response,
+      responseCode: error.responseCode,
+      stack: error.stack
+    });
 
+    // Determine user-friendly error message
+    let userMessage = 'Failed to send email';
+    let errorDetails = error.message;
+
+    if (error.message.includes('timeout')) {
+      userMessage = 'Connection timeout. The email server took too long to respond.';
+      errorDetails = 'SMTP connection timeout - server may be unreachable or slow';
+    } else if (error.code === 'EAUTH' || error.message.includes('Invalid login') || error.message.includes('Authentication failed')) {
+      userMessage = 'Email authentication failed. Please check SMTP credentials.';
+      errorDetails = 'SMTP authentication error - invalid username or password';
+    } else if (error.code === 'ECONNREFUSED' || error.message.includes('ECONNREFUSED')) {
+      userMessage = 'Cannot connect to email server. The server may be down.';
+      errorDetails = 'SMTP connection refused - server may be unreachable';
+    } else if (error.code === 'ETIMEDOUT' || error.message.includes('ETIMEDOUT')) {
+      userMessage = 'Connection timeout. Please try again later.';
+      errorDetails = 'SMTP connection timed out';
+    } else if (error.message.includes('ENOTFOUND') || error.code === 'ENOTFOUND') {
+      userMessage = 'Email server not found. Please check SMTP host configuration.';
+      errorDetails = 'SMTP host not found - check SMTP_HOST environment variable';
+    }
+
+    // Log to database if enabled
     if (isDatabaseEnabled) {
       const { to, subject, productName, downloadUrl } = req.body;
       await query(
         `INSERT INTO email_logs (recipient_email, subject, product_name, download_url, status, error_message)
          VALUES ($1, $2, $3, $4, $5, $6)`,
-        [to || null, subject || null, productName || null, downloadUrl || null, 'failed', error.message]
+        [to || null, subject || null, productName || null, downloadUrl || null, 'failed', errorDetails]
       ).catch((dbError) => console.error('Failed to log email error:', dbError.message));
     }
+
+    // Return error response
     res.status(500).json({
       success: false,
-      error: 'Failed to send email',
-      message: error.message
+      error: userMessage,
+      message: errorDetails,
+      code: error.code || 'UNKNOWN_ERROR'
     });
   }
 });
@@ -314,11 +522,16 @@ app.post('/api/orders', async (req, res) => {
     try {
       await client.query('BEGIN');
 
-      // Insert or update customer
+      // Insert or update customer (using ON CONFLICT with unique email constraint)
+      let customerId;
       const customerResult = await client.query(
         `INSERT INTO customers (user_id, session_id, email, first_name, last_name, phone)
          VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT DO NOTHING
+         ON CONFLICT (email) 
+         DO UPDATE SET 
+           user_id = COALESCE(EXCLUDED.user_id, customers.user_id),
+           session_id = COALESCE(EXCLUDED.session_id, customers.session_id),
+           phone = COALESCE(EXCLUDED.phone, customers.phone)
          RETURNING id`,
         [
           customer.userId || null,
@@ -330,15 +543,17 @@ app.post('/api/orders', async (req, res) => {
         ]
       );
 
-      let customerId;
       if (customerResult.rows.length > 0) {
         customerId = customerResult.rows[0].id;
       } else {
-        // Customer already exists, get their ID
+        // Fallback: if RETURNING didn't work, fetch the customer
         const existingCustomer = await client.query(
-          `SELECT id FROM customers WHERE email = $1 ORDER BY created_at DESC LIMIT 1`,
+          `SELECT id FROM customers WHERE email = $1 LIMIT 1`,
           [customer.email]
         );
+        if (existingCustomer.rows.length === 0) {
+          throw new Error('Failed to create or retrieve customer');
+        }
         customerId = existingCustomer.rows[0].id;
       }
 
@@ -605,9 +820,30 @@ app.get('/api/email-logs', async (req, res) => {
   }
 });
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({
+    success: false,
+    error: 'Internal server error',
+    message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message
+  });
+});
+
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: 'Endpoint not found',
+    path: req.path
+  });
+});
+
 // Start server
 app.listen(PORT, () => {
   console.log(`🚀 Email server running on port ${PORT}`);
   console.log(`📧 SMTP Host: ${process.env.SMTP_HOST || 'smtp.hostinger.com'}`);
   console.log(`👤 SMTP User: ${process.env.SMTP_USER || 'Not configured'}`);
+  console.log(`🌐 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️  Database: ${isDatabaseEnabled ? 'Enabled' : 'Disabled'}`);
 });

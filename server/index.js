@@ -44,6 +44,9 @@ app.use(cors({
   credentials: true
 }));
 
+// Handle preflight requests explicitly (Critical for Vercel -> Render)
+app.options('*', cors());
+
 // Middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));

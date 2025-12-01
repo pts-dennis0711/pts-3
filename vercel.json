@@ -1,0 +1,12 @@
+{
+    "buildCommand": "npm run build",
+    "outputDirectory": "build",
+    "installCommand": "npm install",
+    "framework": "create-react-app",
+    "env": {
+        "CI": "false",
+        "REACT_APP_API_URL": "https://pts3-backend.onrender.com",
+        "REACT_APP_SITE_NAME": "ProtoTech Solutions",
+        "REACT_APP_SITE_URL": "https://staging8.prototechsolutions.com"
+    }
+}

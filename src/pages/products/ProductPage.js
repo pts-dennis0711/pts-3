@@ -15,6 +15,7 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { getProductSchema, getBreadcrumbSchema, getFAQSchema } from '../../utils/structuredData';
 import { sendTrialDownloadEmail } from '../../services/emailService';
+import { getProductBySlug } from '../../services/productService';
 
 const ProductPage = () => {
   const { categorySlug, productSlug } = useParams();
@@ -24,9 +25,39 @@ const ProductPage = () => {
   // Find category
   const category = Object.values(productCategories).find(cat => cat.slug === categorySlug);
 
-  // Get product details - try category-specific slug first, then generic slug
+  // State for API-fetched product data
+  const [apiProductData, setApiProductData] = useState(null);
+  const [isLoadingProduct, setIsLoadingProduct] = useState(true);
+
+  // Fetch product data from API
+  useEffect(() => {
+    const fetchProductData = async () => {
+      try {
+        setIsLoadingProduct(true);
+        // Try category-specific slug first, then generic slug
+        const categorySpecificSlug = `${categorySlug}-${productSlug}`;
+        let data;
+        try {
+          data = await getProductBySlug(categorySpecificSlug);
+        } catch {
+          data = await getProductBySlug(productSlug);
+        }
+        setApiProductData(data);
+      } catch (error) {
+        console.warn('Failed to fetch from API, using static data:', error);
+        // Fallback to static data (already handled below)
+      } finally {
+        setIsLoadingProduct(false);
+      }
+    };
+
+    fetchProductData();
+  }, [categorySlug, productSlug]);
+
+  // Get product details - try API data first, then static data
   const categorySpecificSlug = `${categorySlug}-${productSlug}`;
-  const productDetails = getProductDetails(categorySpecificSlug) || getProductDetails(productSlug);
+  const staticProductDetails = getProductDetails(categorySpecificSlug) || getProductDetails(productSlug);
+  const productDetails = apiProductData || staticProductDetails;
 
   // Find product name from category
   const product = category
@@ -38,8 +69,8 @@ const ProductPage = () => {
 
   const isExporter = category && category.exporters.includes(product);
 
-  // Get product-specific pricing (or default pricing if no custom pricing exists)
-  const productPricing = getProductPricing(productSlug);
+  // Get product-specific pricing - use API data if available, otherwise static
+  const productPricing = apiProductData?.pricing || getProductPricing(productSlug);
 
   // Modal states
   const [showVersionHistory, setShowVersionHistory] = useState(false);

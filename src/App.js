@@ -81,6 +81,23 @@ import CheckoutPage from './pages/CheckoutPage';
 import AccountPage from './pages/AccountPage';
 import OrderDetailPage from './pages/OrderDetailPage';
 
+import AdminLogin from './admin/AdminLogin';
+import Dashboard from './admin/Dashboard';
+import ProductList from './admin/ProductList';
+import ProductEditor from './admin/ProductEditor';
+
+// Simple Admin Route Wrapper
+const AdminRoute = ({ children }) => {
+  const token = localStorage.getItem('adminToken');
+  const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!token) navigate('/admin/login');
+  }, [token, navigate]);
+
+  return token ? children : null;
+};
+
 function App() {
   const location = useLocation();
   const loadState = (key, fallback) => {
@@ -99,7 +116,6 @@ function App() {
   const { cartCount } = useStore();
   const { cartCount: ecomCartCount } = useCartStore();
   const { isAuthenticated } = useAuthStore();
-  const navigate = useNavigate();
 
   useEffect(() => {
     localStorage.setItem('cartCount', JSON.stringify(cartCount));
@@ -156,116 +172,126 @@ function App() {
         setIsAdmin={setIsAdmin}
       />
       <Routes>
-        {isAdmin ? (
-          <>
-            <Route path="/admin" element={<AdminDashboard products={products} blogs={blogs} stories={successStories} />} />
-            <Route path="/admin/products" element={<AdminProducts products={products} setProducts={setProducts} />} />
-            <Route path="/admin/blogs" element={<AdminBlogs blogs={blogs} setBlogs={setBlogs} />} />
-            <Route path="/admin/stories" element={<AdminStories stories={successStories} setStories={setSuccessStories} />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<HomePage />} />
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
 
-            {/* Solutions Routes - Specific routes first */}
-            <Route path="/solutions" element={<SolutionsPage />} />
-            <Route path="/solutions/3d-web-application" element={<WebApplicationPage />} />
-            <Route path="/solutions/3d-desktop-application" element={<DesktopApplicationPage />} />
-            <Route path="/solutions/3d-mobile-application" element={<MobileApplicationPage />} />
-            <Route path="/solutions/eyeshot-development" element={<EyeshotDevelopmentPage />} />
-            <Route path="/solutions/3d-product-configurator" element={<ProductConfiguratorPage />} />
-            <Route path="/solutions/cpq-configurator" element={<CPQConfiguratorPage />} />
-            <Route path="/solutions/3d-furniture-configurator" element={<FurnitureConfiguratorPage />} />
-            <Route path="/solutions/cloud-services" element={<CloudServicesPage />} />
-            <Route path="/solutions/bim-application" element={<BIMApplicationPage />} />
-            <Route path="/solutions/bim-automation" element={<BIMAutomationPage />} />
-            <Route path="/solutions/3d-ar-vr-development" element={<ARVRDevelopmentPage />} />
-            <Route path="/solutions/data-interoperability" element={<DataInteroperabilityPage />} />
-            <Route path="/solutions/cad-translation" element={<CADTranslationPage />} />
-            <Route path="/solutions/cad-customization" element={<CADCustomizationPage />} />
-            <Route path="/solutions/data-annotation" element={<DataAnnotationPage />} />
-            <Route path="/solutions/quality-assurance" element={<QualityAssurancePage />} />
-            <Route path="/solutions/game-testing" element={<GameTestingPage />} />
-            <Route path="/solutions/:slug" element={<SolutionDetailPage />} />
+        {/* Protected Admin Routes */}
+        <Route path="/admin" element={
+          <AdminRoute>
+            <Dashboard />
+          </AdminRoute>
+        } />
+        <Route path="/admin/products" element={
+          <AdminRoute>
+            <ProductList />
+          </AdminRoute>
+        } />
+        <Route path="/admin/products/:slug" element={
+          <AdminRoute>
+            <ProductEditor />
+          </AdminRoute>
+        } />
 
-            {/* 3D Services Routes - New routes with /3d-services/ prefix */}
-            <Route path="/3d-services/3d-web-application" element={<WebApplicationPage />} />
-            <Route path="/3d-services/3d-desktop-application" element={<DesktopApplicationPage />} />
-            <Route path="/3d-services/3d-mobile-application" element={<MobileApplicationPage />} />
-            <Route path="/3d-services/eyeshot-development" element={<EyeshotDevelopmentPage />} />
-            <Route path="/3d-services/3d-product-configurator" element={<ProductConfiguratorPage />} />
-            <Route path="/3d-services/cpq-configurator" element={<CPQConfiguratorPage />} />
-            <Route path="/3d-services/3d-furniture-configurator" element={<FurnitureConfiguratorPage />} />
-            <Route path="/3d-services/cloud-services" element={<CloudServicesPage />} />
-            <Route path="/3d-services/bim-application" element={<BIMApplicationPage />} />
-            <Route path="/3d-services/bim-automation" element={<BIMAutomationPage />} />
-            <Route path="/3d-services/3d-ar-vr-development" element={<ARVRDevelopmentPage />} />
-            <Route path="/3d-services/data-interoperability" element={<DataInteroperabilityPage />} />
-            <Route path="/3d-services/cad-translation" element={<CADTranslationPage />} />
-            <Route path="/3d-services/cad-customization" element={<CADCustomizationPage />} />
-            <Route path="/3d-services/quality-assurance" element={<QualityAssurancePage />} />
-            <Route path="/3d-services/game-testing" element={<GameTestingPage />} />
-            <Route path="/3d-services/:slug" element={<SolutionDetailPage />} />
+        {/* Public Routes */}
+        <Route path="/" element={<HomePage />} />
 
-            {/* Services Routes - Specific routes first */}
-            <Route path="/services" element={<ServicesPage />} />
-            <Route path="/services/ml-data-annotation" element={<DataAnnotationPage />} />
-            <Route path="/services/cad-drafting" element={<CADDraftingPage />} />
-            <Route path="/services/architectural-drafting" element={<ArchitecturalDraftingPage />} />
-            <Route path="/services/millwork-drafting" element={<MillworkDraftingPage />} />
-            <Route path="/services/structural-cad-drafting" element={<StructuralCADDraftingPage />} />
-            <Route path="/services/bim-modeling" element={<BIMModelingPage />} />
-            <Route path="/services/revit-mep-drafting" element={<RevitMEPDraftingPage />} />
-            <Route path="/services/scan-to-bim" element={<ScanToBIMPage />} />
-            <Route path="/services/revit-family-creation" element={<RevitFamilyCreationPage />} />
-            <Route path="/services/cad-to-bim" element={<CADtoBIMPage />} />
-            <Route path="/services/bim-coordination" element={<BIMCoordinationPage />} />
-            <Route path="/services/as-built-drawing" element={<AsBuiltDrawingPage />} />
-            <Route path="/services/civil-cad-drafting" element={<CivilCADDraftingPage />} />
-            <Route path="/services/road-highway-design" element={<RoadHighwayDesignPage />} />
-            <Route path="/services/land-survey-drafting" element={<LandSurveyDraftingPage />} />
-            <Route path="/services/mechanical-drafting" element={<MechanicalDraftingPage />} />
-            <Route path="/services/plant-design-engineering" element={<PlantDesignEngineeringPage />} />
-            <Route path="/services/:slug" element={<ServiceDetailPage />} />
+        {/* Solutions Routes - Specific routes first */}
+        <Route path="/solutions" element={<SolutionsPage />} />
+        <Route path="/solutions/3d-web-application" element={<WebApplicationPage />} />
+        <Route path="/solutions/3d-desktop-application" element={<DesktopApplicationPage />} />
+        <Route path="/solutions/3d-mobile-application" element={<MobileApplicationPage />} />
+        <Route path="/solutions/eyeshot-development" element={<EyeshotDevelopmentPage />} />
+        <Route path="/solutions/3d-product-configurator" element={<ProductConfiguratorPage />} />
+        <Route path="/solutions/cpq-configurator" element={<CPQConfiguratorPage />} />
+        <Route path="/solutions/3d-furniture-configurator" element={<FurnitureConfiguratorPage />} />
+        <Route path="/solutions/cloud-services" element={<CloudServicesPage />} />
+        <Route path="/solutions/bim-application" element={<BIMApplicationPage />} />
+        <Route path="/solutions/bim-automation" element={<BIMAutomationPage />} />
+        <Route path="/solutions/3d-ar-vr-development" element={<ARVRDevelopmentPage />} />
+        <Route path="/solutions/data-interoperability" element={<DataInteroperabilityPage />} />
+        <Route path="/solutions/cad-translation" element={<CADTranslationPage />} />
+        <Route path="/solutions/cad-customization" element={<CADCustomizationPage />} />
+        <Route path="/solutions/data-annotation" element={<DataAnnotationPage />} />
+        <Route path="/solutions/quality-assurance" element={<QualityAssurancePage />} />
+        <Route path="/solutions/game-testing" element={<GameTestingPage />} />
+        <Route path="/solutions/:slug" element={<SolutionDetailPage />} />
 
-            {/* Product Routes - Product detail pages first, then category pages */}
-            <Route path="/3d-products" element={<ShopPage />} />
-            <Route path="/3d-products/:categorySlug/:productSlug/trial" element={<TrialDownloadForm />} />
-            <Route path="/3d-products/:categorySlug/:productSlug/faq" element={<ProductFAQPage />} />
-            <Route path="/3d-products/:categorySlug/:productSlug" element={<ProductPage />} />
-            <Route path="/3d-products/autocad" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/inventor" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/maya" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/fusion-360" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/navisworks" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/revit" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/sketchup" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/solid-edge" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/solidworks" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/3ds-max" element={<ProductCategoryPage />} />
-            <Route path="/3d-products/:categorySlug" element={<ProductCategoryPage />} />
-            <Route path="/product" element={<ProductDetailPage />} />
-            <Route path="/search" element={<SearchResultsPage />} />
-            <Route path="/company" element={<CompanyPage />} />
-            <Route path="/about" element={<AboutPage />} />
-            <Route path="/careers" element={<CareersPage />} />
-            <Route path="/partners" element={<PartnersPage />} />
-            <Route path="/support" element={<SupportPage />} />
-            <Route path="/resources" element={<ResourcesPage />} />
-            <Route path="/blog/:id" element={<BlogDetailPage />} />
-            <Route path="/blog" element={<BlogPage />} />
-            <Route path="/success/:id" element={<SuccessStoryDetailPage />} />
-            <Route path="/success" element={<SuccessStoriesPage />} />
+        {/* 3D Services Routes - New routes with /3d-services/ prefix */}
+        <Route path="/3d-services/3d-web-application" element={<WebApplicationPage />} />
+        <Route path="/3d-services/3d-desktop-application" element={<DesktopApplicationPage />} />
+        <Route path="/3d-services/3d-mobile-application" element={<MobileApplicationPage />} />
+        <Route path="/3d-services/eyeshot-development" element={<EyeshotDevelopmentPage />} />
+        <Route path="/3d-services/3d-product-configurator" element={<ProductConfiguratorPage />} />
+        <Route path="/3d-services/cpq-configurator" element={<CPQConfiguratorPage />} />
+        <Route path="/3d-services/3d-furniture-configurator" element={<FurnitureConfiguratorPage />} />
+        <Route path="/3d-services/cloud-services" element={<CloudServicesPage />} />
+        <Route path="/3d-services/bim-application" element={<BIMApplicationPage />} />
+        <Route path="/3d-services/bim-automation" element={<BIMAutomationPage />} />
+        <Route path="/3d-services/3d-ar-vr-development" element={<ARVRDevelopmentPage />} />
+        <Route path="/3d-services/data-interoperability" element={<DataInteroperabilityPage />} />
+        <Route path="/3d-services/cad-translation" element={<CADTranslationPage />} />
+        <Route path="/3d-services/cad-customization" element={<CADCustomizationPage />} />
+        <Route path="/3d-services/quality-assurance" element={<QualityAssurancePage />} />
+        <Route path="/3d-services/game-testing" element={<GameTestingPage />} />
+        <Route path="/3d-services/:slug" element={<SolutionDetailPage />} />
 
-            {/* E-commerce Routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/cart" element={<CartPage />} />
-            <Route path="/checkout" element={<CheckoutPage />} />
-            <Route path="/account" element={<AccountPage />} />
-            <Route path="/order/:orderId" element={<OrderDetailPage />} />
-          </>
-        )}
+        {/* Services Routes - Specific routes first */}
+        <Route path="/services" element={<ServicesPage />} />
+        <Route path="/services/ml-data-annotation" element={<DataAnnotationPage />} />
+        <Route path="/services/cad-drafting" element={<CADDraftingPage />} />
+        <Route path="/services/architectural-drafting" element={<ArchitecturalDraftingPage />} />
+        <Route path="/services/millwork-drafting" element={<MillworkDraftingPage />} />
+        <Route path="/services/structural-cad-drafting" element={<StructuralCADDraftingPage />} />
+        <Route path="/services/bim-modeling" element={<BIMModelingPage />} />
+        <Route path="/services/revit-mep-drafting" element={<RevitMEPDraftingPage />} />
+        <Route path="/services/scan-to-bim" element={<ScanToBIMPage />} />
+        <Route path="/services/revit-family-creation" element={<RevitFamilyCreationPage />} />
+        <Route path="/services/cad-to-bim" element={<CADtoBIMPage />} />
+        <Route path="/services/bim-coordination" element={<BIMCoordinationPage />} />
+        <Route path="/services/as-built-drawing" element={<AsBuiltDrawingPage />} />
+        <Route path="/services/civil-cad-drafting" element={<CivilCADDraftingPage />} />
+        <Route path="/services/road-highway-design" element={<RoadHighwayDesignPage />} />
+        <Route path="/services/land-survey-drafting" element={<LandSurveyDraftingPage />} />
+        <Route path="/services/mechanical-drafting" element={<MechanicalDraftingPage />} />
+        <Route path="/services/plant-design-engineering" element={<PlantDesignEngineeringPage />} />
+        <Route path="/services/:slug" element={<ServiceDetailPage />} />
+
+        {/* Product Routes - Product detail pages first, then category pages */}
+        <Route path="/3d-products" element={<ShopPage />} />
+        <Route path="/3d-products/:categorySlug/:productSlug/trial" element={<TrialDownloadForm />} />
+        <Route path="/3d-products/:categorySlug/:productSlug/faq" element={<ProductFAQPage />} />
+        <Route path="/3d-products/:categorySlug/:productSlug" element={<ProductPage />} />
+        <Route path="/3d-products/autocad" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/inventor" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/maya" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/fusion-360" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/navisworks" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/revit" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/sketchup" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/solid-edge" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/solidworks" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/3ds-max" element={<ProductCategoryPage />} />
+        <Route path="/3d-products/:categorySlug" element={<ProductCategoryPage />} />
+        <Route path="/product" element={<ProductDetailPage />} />
+        <Route path="/search" element={<SearchResultsPage />} />
+        <Route path="/company" element={<CompanyPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        <Route path="/careers" element={<CareersPage />} />
+        <Route path="/partners" element={<PartnersPage />} />
+        <Route path="/support" element={<SupportPage />} />
+        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/blog/:id" element={<BlogDetailPage />} />
+        <Route path="/blog" element={<BlogPage />} />
+        <Route path="/success/:id" element={<SuccessStoryDetailPage />} />
+        <Route path="/success" element={<SuccessStoriesPage />} />
+
+        {/* E-commerce Routes */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/cart" element={<CartPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="/order/:orderId" element={<OrderDetailPage />} />
       </Routes>
 
       {/* Scroll to Top Button */}

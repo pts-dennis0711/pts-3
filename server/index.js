@@ -51,6 +51,10 @@ app.options('*', cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// API Routes
+app.use('/api/products', require('./routes/products'));
+app.use('/api/admin', require('./routes/admin'));
+
 // Database Initialization
 const initializeDatabase = async () => {
   if (!isDatabaseEnabled) return;

@@ -43,9 +43,12 @@ export const productCategories = {
     description: 'Extend Maya\'s capabilities with ProtoTech\'s specialized export plugins. Seamlessly export your 3D models to various formats for diverse workflows.',
     exporters: [
       '3D PDF Exporter',
-      'WEBGL Exporter'
+      'WEBGL Exporter',
+      'GLTF Exporter',
     ],
-    importers: []
+    importers: [
+      'GLTF Importer'
+    ]
   },
   fusion360: {
     id: 'fusion360',

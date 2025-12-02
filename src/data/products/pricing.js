@@ -170,6 +170,45 @@ export const customProductPricing = {
     }
   },
 
+  // GLTF Exporter (Maya) - Modern web/game format
+  'maya-gltf-exporter': {
+    trial: {
+      type: 'Trial',
+      description: 'No Credit Card Required.',
+      price: 'Free',
+      ctaText: 'Free Download',
+      features: ['Full GLTF export', '30-day trial period', 'Texture support', 'Email support']
+    },
+    'locked-single': {
+      type: 'Locked-License',
+      description: 'Single Machine',
+      price: '$99',
+      ctaText: 'Add to Cart',
+      features: ['Single machine license', 'GLTF & GLB export', 'Animation support', 'PBR materials', '1 year updates']
+    },
+    'locked-two': {
+      type: 'Locked Licenses by Same User',
+      description: 'Two Machine',
+      price: '$180',
+      ctaText: 'Add to Cart',
+      features: ['Two machine licenses', 'Same user only', 'Advanced optimization', 'Custom settings', '1 year updates']
+    },
+    'transferable': {
+      type: 'Transferable License',
+      description: 'Single Floating',
+      price: '$299',
+      ctaText: 'Add to Cart',
+      features: ['Floating license', 'Network installation', 'Draco compression', 'Priority support', 'Batch export']
+    },
+    automation: {
+      type: 'Locked-License',
+      description: 'Automation',
+      price: '$699',
+      ctaText: 'Add to Cart',
+      features: ['Batch GLTF export', 'API access', 'Custom pipelines', 'Automated conversion', 'Dedicated support']
+    }
+  },
+
   // ============================================
   // STANDARD EXPORTERS - Common formats, good value
   // ============================================
@@ -374,6 +413,45 @@ export const customProductPricing = {
       price: '$499',
       ctaText: 'Add to Cart',
       features: ['Automated import', 'API access', 'Custom workflows', 'Folder monitoring', 'Dedicated support']
+    }
+  },
+
+  // GLTF Importer (Maya) - Modern web/game format
+  'maya-gltf-importer': {
+    trial: {
+      type: 'Trial',
+      description: 'No Credit Card Required.',
+      price: 'Free',
+      ctaText: 'Free Download',
+      features: ['Full GLTF import', '30-day trial period', 'Texture import', 'Email support']
+    },
+    'locked-single': {
+      type: 'Locked-License',
+      description: 'Single Machine',
+      price: '$59',
+      ctaText: 'Add to Cart',
+      features: ['Single machine license', 'GLTF & GLB import', 'Scene hierarchy', 'Material assignment', '1 year updates']
+    },
+    'locked-two': {
+      type: 'Locked Licenses by Same User',
+      description: 'Two Machine',
+      price: '$110',
+      ctaText: 'Add to Cart',
+      features: ['Two machine licenses', 'Same user only', 'Advanced import settings', 'Scale control', '1 year updates']
+    },
+    'transferable': {
+      type: 'Transferable License',
+      description: 'Single Floating',
+      price: '$199',
+      ctaText: 'Add to Cart',
+      features: ['Floating license', 'Network installation', 'Batch import', 'Priority support', 'Optimization']
+    },
+    automation: {
+      type: 'Locked-License',
+      description: 'Automation',
+      price: '$499',
+      ctaText: 'Add to Cart',
+      features: ['Automated import', 'API access', 'Custom workflows', 'Asset pipeline', 'Dedicated support']
     }
   },
 
